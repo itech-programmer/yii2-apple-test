@@ -1,38 +1,39 @@
-version: '3.2'
-
 services:
-
-  frontend:
-    build: frontend
-    ports:
-      - 20080:80
-    volumes:
-      # Re-use local composer cache via host-volume
-      - ~/.composer-docker/cache:/root/.composer/cache:delegated
-      # Mount source-code for development
-      - ./:/app
-
   backend:
-    build: backend
-    ports:
-      - 21080:80
+    build:
+      context: ./.docker/php
+    container_name: backend
     volumes:
-      # Re-use local composer cache via host-volume
+      - ./:/var/www/html
       - ~/.composer-docker/cache:/root/.composer/cache:delegated
-      # Mount source-code for development
-      - ./:/app
+      - ./.docker/php/php.ini:/usr/local/etc/php/conf.d/99-app.ini:ro
+    depends_on:
+      - database
 
-  mysql:
-    image: mysql:5.7
+  web:
+    image: nginx:1.27
+    container_name: web
+    ports:
+      - "8081:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./.docker/nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - backend
+
+  database:
+    image: mysql:8.0
+    container_name: database
     environment:
-      - MYSQL_ROOT_PASSWORD=verysecret
-      - MYSQL_DATABASE=yii2advanced
-      - MYSQL_USER=yii2advanced
-      - MYSQL_PASSWORD=secret
+      MYSQL_DATABASE: apple
+      MYSQL_USER: apple
+      MYSQL_PASSWORD: apple
+      MYSQL_ROOT_PASSWORD: root
+    command: ["--default-authentication-plugin=mysql_native_password"]
+    ports:
+      - "33061:3306"
+    volumes:
+      - db-data:/var/lib/mysql
 
-  #pgsql:
-  #  image: postgres:9.5
-  #  environment:
-  #    - POSTGRES_DB=yii2advanced
-  #    - POSTGRES_USER=yii2advanced
-  #    - POSTGRES_PASSWORD=secret
+volumes:
+  db-data:
