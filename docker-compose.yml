@@ -18,6 +18,7 @@ services:
     volumes:
       - ./:/var/www/html:ro
       - ./.docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./.docker/nginx/.htpasswd:/etc/nginx/.htpasswd
     depends_on:
       - backend
 
